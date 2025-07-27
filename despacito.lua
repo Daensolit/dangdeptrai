@@ -104,28 +104,49 @@ local function clearDrawings()
 end
 
 local function isVisible(part)
-   local _, onScreen = Camera:WorldToViewportPoint(part.Position)
-   return onScreen
+   local origin = Camera.CFrame.Position
+   local direction = (part.Position - origin).Unit * 1000
+   local rayParams = RaycastParams.new()
+   rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+   rayParams.FilterDescendantsInstances = {LocalPlayer.Character}
+
+   local result = workspace:Raycast(origin, direction, rayParams)
+   return result and result.Instance and part:IsDescendantOf(result.Instance:FindFirstAncestorOfClass("Model"))
 end
+
 
 local function getClosestVisibleEnemy()
    local closest = nil
    local shortest = AimbotFOV
+   local origin = Camera.CFrame.Position
+
    for _, p in ipairs(Players:GetPlayers()) do
       if p ~= LocalPlayer and p.Team ~= LocalPlayer.Team and p.Character and p.Character:FindFirstChild(TargetPart) then
          local part = p.Character[TargetPart]
          local pos, visible = Camera:WorldToViewportPoint(part.Position)
          if visible then
-            local dist = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
-            if dist < shortest then
-               shortest = dist
-               closest = part
+            -- raycast check
+            local direction = (part.Position - origin)
+            local rayParams = RaycastParams.new()
+            rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+            rayParams.FilterDescendantsInstances = {LocalPlayer.Character}
+            rayParams.IgnoreWater = true
+
+            local result = workspace:Raycast(origin, direction, rayParams)
+
+            if result and result.Instance and part:IsDescendantOf(result.Instance:FindFirstAncestorOfClass("Model")) then
+               local dist = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+               if dist < shortest then
+                  shortest = dist
+                  closest = part
+               end
             end
          end
       end
    end
    return closest
 end
+
 
 RunService.RenderStepped:Connect(function()
    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
