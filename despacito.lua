@@ -48,7 +48,6 @@ Tab:CreateSlider({
    CurrentValue = AimbotFOV,
    Callback = function(Value)
       AimbotFOV = Value
-      FOVCircle.Radius = Value
    end
 })
 
@@ -83,9 +82,6 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
-local UserInputService = game:GetService("UserInputService")
-
-local Mouse = LocalPlayer:GetMouse()
 
 local Drawing = Drawing or getgenv().Drawing
 local FOVCircle = Drawing.new("Circle")
@@ -105,6 +101,11 @@ local function clearDrawings()
       end
    end
    drawings = {}
+end
+
+local function isVisible(part)
+   local _, onScreen = Camera:WorldToViewportPoint(part.Position)
+   return onScreen
 end
 
 local function getClosestVisibleEnemy()
@@ -142,6 +143,8 @@ RunService.RenderStepped:Connect(function()
       if p ~= LocalPlayer and p.Team ~= LocalPlayer.Team and p.Character and p.Character:FindFirstChild("Head") and p.Character:FindFirstChild("HumanoidRootPart") then
          local head = p.Character.Head
          local hrp = p.Character.HumanoidRootPart
+         local target = p.Character:FindFirstChild(TargetPart)
+
          local pos, onscreen = Camera:WorldToViewportPoint(hrp.Position)
          local headPos = Camera:WorldToViewportPoint(head.Position)
          local height = (headPos - pos).Y
@@ -149,10 +152,11 @@ RunService.RenderStepped:Connect(function()
          local boxPos = Vector2.new(pos.X - width/2, pos.Y - height/2)
 
          if onscreen then
+            local isVis = isVisible(target)
             local box = Drawing.new("Square")
             box.Size = Vector2.new(width, height)
             box.Position = boxPos
-            box.Color = Color3.fromRGB(255, 0, 0)
+            box.Color = isVis and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
             box.Thickness = 1.5
             box.Transparency = 1
             box.Filled = false
