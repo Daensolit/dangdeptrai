@@ -1,8 +1,11 @@
+
+repeat wait() until game:IsLoaded() and game.Players.LocalPlayer
+
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Hack Arsenal - HACKGAMEVIP",
-   LoadingTitle = "Đang Tải Arsenal Hacks...",
+   LoadingTitle = "Đang Tải Arsenal Hack...",
    LoadingSubtitle = "Made By Daensolit",
    ShowText = "Menu",
    Theme = "Default",
@@ -17,6 +20,9 @@ local Tab = Window:CreateTab("Arsenal Hack", 4483362458)
 local ESPEnabled = false
 local AimbotEnabled = false
 local AimbotFOV = 150
+local SmoothFactor = 5
+local AutoFire = false
+local TargetPart = "Head"
 
 Tab:CreateToggle({
    Name = "ESP",
@@ -46,10 +52,40 @@ Tab:CreateSlider({
    end
 })
 
+Tab:CreateSlider({
+   Name = "Smooth Aimbot",
+   Range = {1, 10},
+   Increment = 1,
+   CurrentValue = SmoothFactor,
+   Callback = function(Value)
+      SmoothFactor = Value
+   end
+})
+
+Tab:CreateToggle({
+   Name = "Auto Fire",
+   CurrentValue = false,
+   Callback = function(Value)
+      AutoFire = Value
+   end
+})
+
+Tab:CreateDropdown({
+   Name = "Aim Target",
+   Options = {"Head", "Neck", "HumanoidRootPart"},
+   CurrentOption = "Head",
+   Callback = function(Option)
+      TargetPart = Option
+   end
+})
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
+local UserInputService = game:GetService("UserInputService")
+
+local Mouse = LocalPlayer:GetMouse()
 
 local Drawing = Drawing or getgenv().Drawing
 local FOVCircle = Drawing.new("Circle")
@@ -71,17 +107,18 @@ local function clearDrawings()
    drawings = {}
 end
 
-local function getClosestEnemy()
-   local closest, shortest = nil, AimbotFOV
+local function getClosestVisibleEnemy()
+   local closest = nil
+   local shortest = AimbotFOV
    for _, p in ipairs(Players:GetPlayers()) do
-      if p ~= LocalPlayer and p.Team ~= LocalPlayer.Team and p.Character and p.Character:FindFirstChild("Head") then
-         local head = p.Character.Head
-         local pos, onscreen = Camera:WorldToViewportPoint(head.Position)
-         if onscreen then
+      if p ~= LocalPlayer and p.Team ~= LocalPlayer.Team and p.Character and p.Character:FindFirstChild(TargetPart) then
+         local part = p.Character[TargetPart]
+         local pos, visible = Camera:WorldToViewportPoint(part.Position)
+         if visible then
             local dist = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
             if dist < shortest then
                shortest = dist
-               closest = head
+               closest = part
             end
          end
       end
@@ -91,7 +128,8 @@ end
 
 RunService.RenderStepped:Connect(function()
    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
-   FOVCircle.Visible = AimbotEnabled
+   FOVCircle.Visible = AimbotEnabled and ESPEnabled
+   FOVCircle.Radius = AimbotFOV
 
    if not ESPEnabled then
       clearDrawings()
@@ -106,15 +144,18 @@ RunService.RenderStepped:Connect(function()
          local hrp = p.Character.HumanoidRootPart
          local pos, onscreen = Camera:WorldToViewportPoint(hrp.Position)
          local headPos = Camera:WorldToViewportPoint(head.Position)
-         local size = Vector2.new(50, 100)
+         local height = (headPos - pos).Y
+         local width = height / 2
+         local boxPos = Vector2.new(pos.X - width/2, pos.Y - height/2)
 
          if onscreen then
             local box = Drawing.new("Square")
-            box.Size = size
-            box.Position = Vector2.new(pos.X - size.X/2, pos.Y - size.Y/2)
+            box.Size = Vector2.new(width, height)
+            box.Position = boxPos
             box.Color = Color3.fromRGB(255, 0, 0)
             box.Thickness = 1.5
-            box.Transparency = 0.9
+            box.Transparency = 1
+            box.Filled = false
             box.Visible = true
 
             local name = Drawing.new("Text")
@@ -123,12 +164,12 @@ RunService.RenderStepped:Connect(function()
             name.Center = true
             name.Outline = true
             name.Color = Color3.new(1, 1, 1)
-            name.Position = Vector2.new(pos.X, pos.Y - size.Y/2 - 15)
+            name.Position = Vector2.new(pos.X, pos.Y - height/2 - 15)
             name.Visible = true
 
             local line = Drawing.new("Line")
             line.From = Vector2.new(Camera.ViewportSize.X/2, 0)
-            line.To = Vector2.new(pos.X, pos.Y - size.Y/2)
+            line.To = Vector2.new(pos.X, pos.Y - height/2)
             line.Color = Color3.new(1, 1, 1)
             line.Thickness = 1.5
             line.Transparency = 0.7
@@ -139,10 +180,18 @@ RunService.RenderStepped:Connect(function()
       end
    end
 
-   if AimbotEnabled then
-      local target = getClosestEnemy()
+   if AimbotEnabled and ESPEnabled then
+      local target = getClosestVisibleEnemy()
       if target then
-         Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Position)
+         local direction = (target.Position - Camera.CFrame.Position).Unit
+         local newPos = Camera.CFrame.Position + direction
+         Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, newPos), SmoothFactor / 10)
+
+         if AutoFire then
+            mouse1press()
+            wait()
+            mouse1release()
+         end
       end
    end
 end)
