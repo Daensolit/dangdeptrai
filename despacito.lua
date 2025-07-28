@@ -1,8 +1,9 @@
-
 repeat wait() until game:IsLoaded() and game.Players.LocalPlayer
 
+-- Tải Rayfield UI
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
+-- Cấu hình UI
 local Window = Rayfield:CreateWindow({
    Name = "Hack Arsenal - HACKGAMEVIP",
    LoadingTitle = "Đang Tải Arsenal Hack...",
@@ -15,8 +16,10 @@ local Window = Rayfield:CreateWindow({
    KeySystem = false
 })
 
+-- Tab Hack
 local Tab = Window:CreateTab("Arsenal Hack", 4483362458)
 
+-- Biến điều khiển
 local ESPEnabled = false
 local AimbotEnabled = false
 local AimbotFOV = 150
@@ -24,20 +27,17 @@ local SmoothFactor = 5
 local AutoFire = false
 local TargetPart = "Head"
 
+-- Tạo UI
 Tab:CreateToggle({
    Name = "ESP",
    CurrentValue = false,
-   Callback = function(Value)
-      ESPEnabled = Value
-   end
+   Callback = function(Value) ESPEnabled = Value end
 })
 
 Tab:CreateToggle({
    Name = "Aimbot",
    CurrentValue = false,
-   Callback = function(Value)
-      AimbotEnabled = Value
-   end
+   Callback = function(Value) AimbotEnabled = Value end
 })
 
 Tab:CreateSlider({
@@ -48,6 +48,9 @@ Tab:CreateSlider({
    CurrentValue = AimbotFOV,
    Callback = function(Value)
       AimbotFOV = Value
+      if FOVCircle then
+         FOVCircle.Radius = Value
+      end
    end
 })
 
@@ -56,42 +59,66 @@ Tab:CreateSlider({
    Range = {1, 10},
    Increment = 1,
    CurrentValue = SmoothFactor,
-   Callback = function(Value)
-      SmoothFactor = Value
-   end
+   Callback = function(Value) SmoothFactor = Value end
 })
 
 Tab:CreateToggle({
    Name = "Auto Fire",
    CurrentValue = false,
-   Callback = function(Value)
-      AutoFire = Value
-   end
+   Callback = function(Value) AutoFire = Value end
 })
 
 Tab:CreateDropdown({
    Name = "Aim Target",
    Options = {"Head", "Neck", "HumanoidRootPart"},
    CurrentOption = "Head",
-   Callback = function(Option)
-      TargetPart = Option
-   end
+   Callback = function(Option) TargetPart = Option end
 })
 
+-- Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
+-- Vòng FOV
 local Drawing = Drawing or getgenv().Drawing
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Color = Color3.new(1, 1, 1)
 FOVCircle.Thickness = 1.5
 FOVCircle.NumSides = 64
-FOVCircle.Radius = AimbotFOV
 FOVCircle.Transparency = 0.6
 FOVCircle.Filled = false
+FOVCircle.Radius = AimbotFOV
 
+-- Reinitialize khi camera hoặc nhân vật reset
+local function Reinitialize()
+   LocalPlayer = Players.LocalPlayer
+   Camera = workspace.CurrentCamera
+
+   if not FOVCircle or FOVCircle.Remove then
+      FOVCircle = Drawing.new("Circle")
+      FOVCircle.Color = Color3.new(1, 1, 1)
+      FOVCircle.Thickness = 1.5
+      FOVCircle.NumSides = 64
+      FOVCircle.Transparency = 0.6
+      FOVCircle.Filled = false
+   end
+
+   FOVCircle.Radius = AimbotFOV
+end
+
+LocalPlayer.CharacterAdded:Connect(function()
+   wait(1)
+   Reinitialize()
+end)
+
+workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+   wait(1)
+   Reinitialize()
+end)
+
+-- Helper
 local drawings = {}
 
 local function clearDrawings()
@@ -114,7 +141,6 @@ local function isVisible(part)
    return result and result.Instance and part:IsDescendantOf(result.Instance:FindFirstAncestorOfClass("Model"))
 end
 
-
 local function getClosestVisibleEnemy()
    local closest = nil
    local shortest = AimbotFOV
@@ -125,7 +151,6 @@ local function getClosestVisibleEnemy()
          local part = p.Character[TargetPart]
          local pos, visible = Camera:WorldToViewportPoint(part.Position)
          if visible then
-            -- raycast check
             local direction = (part.Position - origin)
             local rayParams = RaycastParams.new()
             rayParams.FilterType = Enum.RaycastFilterType.Blacklist
@@ -133,7 +158,6 @@ local function getClosestVisibleEnemy()
             rayParams.IgnoreWater = true
 
             local result = workspace:Raycast(origin, direction, rayParams)
-
             if result and result.Instance and part:IsDescendantOf(result.Instance:FindFirstAncestorOfClass("Model")) then
                local dist = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
                if dist < shortest then
@@ -147,7 +171,7 @@ local function getClosestVisibleEnemy()
    return closest
 end
 
-
+-- Main loop
 RunService.RenderStepped:Connect(function()
    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
    FOVCircle.Visible = AimbotEnabled and ESPEnabled
@@ -165,7 +189,6 @@ RunService.RenderStepped:Connect(function()
          local head = p.Character.Head
          local hrp = p.Character.HumanoidRootPart
          local target = p.Character:FindFirstChild(TargetPart)
-
          local pos, onscreen = Camera:WorldToViewportPoint(hrp.Position)
          local headPos = Camera:WorldToViewportPoint(head.Position)
          local height = (headPos - pos).Y
