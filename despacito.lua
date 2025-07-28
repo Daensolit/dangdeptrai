@@ -207,7 +207,7 @@ RunService.RenderStepped:Connect(function()
 
    if AimbotEnabled and ESPEnabled then
       local target = getClosestVisibleEnemy()
-      if target then
+      if target and isVisible(target) then
          local direction = (target.Position - Camera.CFrame.Position).Unit
          local newPos = Camera.CFrame.Position + direction
          Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, newPos), SmoothFactor / 10)
