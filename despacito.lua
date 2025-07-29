@@ -16,18 +16,18 @@ local Window = Rayfield:CreateWindow({
    KeySystem = true,
    KeySettings = {
       Title = "HACKGAMEVIP Key System",
-      Subtitle = "Liên hệ admin Daensolit để lấy Key",
+      Subtitle = "Liên hệ Admin để lấy Key",
       Note = "Nhập đúng Key để vào menu",
       FileName = "HGV_Arsenal_Key",
       SaveKey = true,
       GrabKeyFromSite = false,
-      Key = {"daensolitlachachungmay", "HGV_24H_concucuahaidangsieuto", "keyfree297"}
+      Key = {"daensolit2025", "vippro123", "keyfree"}
    }
 })
 
 local Tab = Window:CreateTab("Arsenal Hack", 4483362458)
 
--- Settings
+-- Cái này là setting sẵn
 local ESPEnabled = false
 local AimbotEnabled = false
 local AimbotFOV = 150
@@ -35,7 +35,7 @@ local SmoothFactor = 5
 local AutoFire = false
 local TargetPart = "Head"
 
--- UI Controls
+-- UI
 Tab:CreateToggle({ Name = "ESP", CurrentValue = false, Callback = function(v) ESPEnabled = v end })
 Tab:CreateToggle({ Name = "Aimbot", CurrentValue = false, Callback = function(v) AimbotEnabled = v end })
 
@@ -66,7 +66,7 @@ local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- Drawing Setup
+-- Setup vẽ
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Color = Color3.new(1, 1, 1)
 FOVCircle.Thickness = 1.5
@@ -84,15 +84,15 @@ local function clearDrawings()
    drawings = {}
 end
 
--- Enemy Check (fix for FFA + teamless modes)
+-- Enemy Check
 local function isEnemy(p)
    if p == LocalPlayer then return false end
    if not p.Character or not p.Character:FindFirstChild("Humanoid") then return false end
-   if p.Team == nil or LocalPlayer.Team == nil then return true end
-   return p.Team ~= LocalPlayer.Team
+   if p.Team ~= nil and LocalPlayer.Team ~= nil and p.Team == LocalPlayer.Team then return false end
+   return true
 end
 
--- Visibility Check
+-- Check nhận diện
 local function isVisible(part)
    if not part or not part:IsA("BasePart") then return false end
    local origin = Camera.CFrame.Position
@@ -105,7 +105,6 @@ local function isVisible(part)
    return not result or result.Instance:IsDescendantOf(part.Parent)
 end
 
--- Get Closest Visible Target
 local function getClosestVisibleEnemy()
    local closest, shortest = nil, AimbotFOV
    for _, p in ipairs(Players:GetPlayers()) do
@@ -123,7 +122,7 @@ local function getClosestVisibleEnemy()
    return closest
 end
 
--- Mobile + PC AutoFire
+-- AutoFire
 local function pressMouse()
    if UserInputService.TouchEnabled then
       local tool = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
@@ -133,7 +132,6 @@ local function pressMouse()
    end
 end
 
--- Main Loop
 RunService.RenderStepped:Connect(function()
    FOVCircle.Position = Camera.ViewportSize / 2
    FOVCircle.Visible = AimbotEnabled and ESPEnabled
