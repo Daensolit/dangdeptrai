@@ -21,7 +21,7 @@ local Window = Rayfield:CreateWindow({
       FileName = "HGV_Arsenal_Key",
       SaveKey = true,
       GrabKeyFromSite = false,
-      Key = {"daensolit2025", "vippro123", "keyfree"}
+      Key = {"daensolitlachachungmay", "vippro123", "keyfree297"}
    }
 })
 
