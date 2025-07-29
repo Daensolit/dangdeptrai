@@ -1,6 +1,3 @@
---// Roblox Arsenal Hack Script - Fixed by ChatGPT Đệ
-
--- UI Library
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
@@ -10,9 +7,22 @@ local Window = Rayfield:CreateWindow({
    ShowText = "Menu",
    Theme = "Default",
    ToggleUIKeybind = Enum.KeyCode.K,
-   ConfigurationSaving = { Enabled = false },
-   Discord = { Enabled = false },
-   KeySystem = false
+   ConfigurationSaving = {
+      Enabled = false,
+   },
+   Discord = {
+      Enabled = false,
+   },
+   KeySystem = true,
+   KeySettings = {
+      Title = "HACKGAMEVIP Key System",
+      Subtitle = "Liên hệ huynh để lấy Key",
+      Note = "Nhập đúng Key để vào menu",
+      FileName = "HGV_Arsenal_Key",
+      SaveKey = true,
+      GrabKeyFromSite = false,
+      Key = {"daensolit2025", "vippro123", "keyfree"}
+   }
 })
 
 local Tab = Window:CreateTab("Arsenal Hack", 4483362458)
