@@ -39,7 +39,12 @@ Tab:CreateSlider({
    Increment = 10,
    Suffix = "px",
    CurrentValue = AimbotFOV,
-   Callback = function(Value) AimbotFOV = Value end
+   Callback = function(Value)
+      AimbotFOV = Value
+      if FOVCircle then
+         FOVCircle.Radius = Value
+      end
+   end
 })
 
 Tab:CreateSlider({
@@ -89,6 +94,7 @@ local function clearDrawings()
 end
 
 local function isVisible(part)
+   if not part or not part:IsA("BasePart") then return false end
    local origin = Camera.CFrame.Position
    local direction = (part.Position - origin)
    local rayParams = RaycastParams.new()
@@ -97,10 +103,9 @@ local function isVisible(part)
    rayParams.IgnoreWater = true
 
    local result = workspace:Raycast(origin, direction, rayParams)
-   if result and result.Instance then
-      return result.Instance == part
-   end
-   return false
+
+   -- Nếu không có vật cản hoặc phần bị cản chính là part luôn => thấy được
+   return not result or result.Instance:IsDescendantOf(part.Parent)
 end
 
 local function getClosestVisibleEnemy()
@@ -123,6 +128,7 @@ local function getClosestVisibleEnemy()
 end
 
 -- AutoFire fix
+wait(0.05)
 local function pressMouse()
    if UserInputService.TouchEnabled then
       -- Mobile không dùng mouse1press được
@@ -154,7 +160,7 @@ RunService.RenderStepped:Connect(function()
       if p ~= LocalPlayer and p.Team ~= LocalPlayer.Team and p.Character and p.Character:FindFirstChild("Head") and p.Character:FindFirstChild("HumanoidRootPart") then
          local head = p.Character.Head
          local hrp = p.Character.HumanoidRootPart
-         local target = p.Character:FindFirstChild(TargetPart)
+         local target = p.Character:FindFirstChild(TargetPart) or p.Character:FindFirstChild("HumanoidRootPart")
 
          local pos, onscreen = Camera:WorldToViewportPoint(hrp.Position)
          local headPos = Camera:WorldToViewportPoint(head.Position)
