@@ -1,3 +1,6 @@
+--// Roblox Arsenal Hack Script - Fixed by ChatGPT Đệ
+
+-- UI Library
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
@@ -14,6 +17,7 @@ local Window = Rayfield:CreateWindow({
 
 local Tab = Window:CreateTab("Arsenal Hack", 4483362458)
 
+-- Settings
 local ESPEnabled = false
 local AimbotEnabled = false
 local AimbotFOV = 150
@@ -21,52 +25,29 @@ local SmoothFactor = 5
 local AutoFire = false
 local TargetPart = "Head"
 
-Tab:CreateToggle({
-   Name = "ESP",
-   CurrentValue = false,
-   Callback = function(Value) ESPEnabled = Value end
-})
-
-Tab:CreateToggle({
-   Name = "Aimbot",
-   CurrentValue = false,
-   Callback = function(Value) AimbotEnabled = Value end
-})
+-- UI Controls
+Tab:CreateToggle({ Name = "ESP", CurrentValue = false, Callback = function(v) ESPEnabled = v end })
+Tab:CreateToggle({ Name = "Aimbot", CurrentValue = false, Callback = function(v) AimbotEnabled = v end })
 
 Tab:CreateSlider({
    Name = "Aimbot FOV",
-   Range = {30, 400},
-   Increment = 10,
-   Suffix = "px",
+   Range = {30, 400}, Increment = 10, Suffix = "px",
    CurrentValue = AimbotFOV,
-   Callback = function(Value)
-      AimbotFOV = Value
-      if FOVCircle then
-         FOVCircle.Radius = Value
-      end
+   Callback = function(v)
+      AimbotFOV = v
+      if FOVCircle then FOVCircle.Radius = v end
    end
 })
 
 Tab:CreateSlider({
    Name = "Smooth Aimbot",
-   Range = {1, 10},
-   Increment = 1,
+   Range = {1, 10}, Increment = 1,
    CurrentValue = SmoothFactor,
-   Callback = function(Value) SmoothFactor = Value end
+   Callback = function(v) SmoothFactor = v end
 })
 
-Tab:CreateToggle({
-   Name = "Auto Fire",
-   CurrentValue = false,
-   Callback = function(Value) AutoFire = Value end
-})
-
-Tab:CreateDropdown({
-   Name = "Aim Target",
-   Options = {"Head", "Neck", "HumanoidRootPart"},
-   CurrentOption = "Head",
-   Callback = function(Option) TargetPart = Option end
-})
+Tab:CreateToggle({ Name = "Auto Fire", CurrentValue = false, Callback = function(v) AutoFire = v end })
+Tab:CreateDropdown({ Name = "Aim Target", Options = {"Head", "Neck", "HumanoidRootPart"}, CurrentOption = "Head", Callback = function(opt) TargetPart = opt end })
 
 -- Services
 local Players = game:GetService("Players")
@@ -75,7 +56,7 @@ local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- Drawing
+-- Drawing Setup
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Color = Color3.new(1, 1, 1)
 FOVCircle.Thickness = 1.5
@@ -88,38 +69,40 @@ local drawings = {}
 
 local function clearDrawings()
    for _, objs in pairs(drawings) do
-      for _, d in ipairs(objs) do if d.Remove then d:Remove() end end
+      for _, obj in ipairs(objs) do if obj.Remove then obj:Remove() end end
    end
    drawings = {}
 end
 
+-- Enemy Check (works for Free For All)
+local function isEnemy(p)
+   return p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Humanoid") and p.Character:FindFirstChild("Head")
+end
+
+-- Visibility Check
 local function isVisible(part)
    if not part or not part:IsA("BasePart") then return false end
    local origin = Camera.CFrame.Position
-   local direction = (part.Position - origin)
+   local dir = (part.Position - origin)
    local rayParams = RaycastParams.new()
    rayParams.FilterType = Enum.RaycastFilterType.Blacklist
    rayParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
    rayParams.IgnoreWater = true
-
-   local result = workspace:Raycast(origin, direction, rayParams)
-
-   -- Nếu không có vật cản hoặc phần bị cản chính là part luôn => thấy được
+   local result = workspace:Raycast(origin, dir, rayParams)
    return not result or result.Instance:IsDescendantOf(part.Parent)
 end
 
+-- Get Closest Visible Target
 local function getClosestVisibleEnemy()
-   local closest = nil
-   local shortest = AimbotFOV
+   local closest, shortest = nil, AimbotFOV
    for _, p in ipairs(Players:GetPlayers()) do
-      if p ~= LocalPlayer and p.Team ~= LocalPlayer.Team and p.Character and p.Character:FindFirstChild(TargetPart) then
+      if isEnemy(p) and p.Character:FindFirstChild(TargetPart) then
          local part = p.Character[TargetPart]
          local screenPos, onScreen = Camera:WorldToViewportPoint(part.Position)
          if onScreen and isVisible(part) then
-            local dist = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+            local dist = (Vector2.new(screenPos.X, screenPos.Y) - Camera.ViewportSize / 2).Magnitude
             if dist < shortest then
-               shortest = dist
-               closest = part
+               closest, shortest = part, dist
             end
          end
       end
@@ -127,49 +110,39 @@ local function getClosestVisibleEnemy()
    return closest
 end
 
--- AutoFire fix
-wait(0.05)
+-- Mobile + PC AutoFire
 local function pressMouse()
    if UserInputService.TouchEnabled then
-      -- Mobile không dùng mouse1press được
       local tool = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
-      if tool and tool:FindFirstChild("Handle") then
-         tool:Activate()
-      end
+      if tool and tool:FindFirstChild("Handle") then tool:Activate() end
    else
-      -- PC
-      mouse1press()
-      wait()
-      mouse1release()
+      mouse1press() wait() mouse1release()
    end
 end
 
+-- Main Loop
 RunService.RenderStepped:Connect(function()
-   FOVCircle.Position = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
+   FOVCircle.Position = Camera.ViewportSize / 2
    FOVCircle.Visible = AimbotEnabled and ESPEnabled
    FOVCircle.Radius = AimbotFOV
 
-   if not ESPEnabled then
-      clearDrawings()
-      return
-   end
-
+   if not ESPEnabled then clearDrawings() return end
    clearDrawings()
 
    for _, p in ipairs(Players:GetPlayers()) do
-      if p ~= LocalPlayer and p.Team ~= LocalPlayer.Team and p.Character and p.Character:FindFirstChild("Head") and p.Character:FindFirstChild("HumanoidRootPart") then
+      if isEnemy(p) and p.Character:FindFirstChild("HumanoidRootPart") then
          local head = p.Character.Head
          local hrp = p.Character.HumanoidRootPart
-         local target = p.Character:FindFirstChild(TargetPart) or p.Character:FindFirstChild("HumanoidRootPart")
-
-         local pos, onscreen = Camera:WorldToViewportPoint(hrp.Position)
+         local part = p.Character:FindFirstChild(TargetPart) or hrp
+         local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
          local headPos = Camera:WorldToViewportPoint(head.Position)
          local height = (headPos - pos).Y
          local width = height / 2
          local boxPos = Vector2.new(pos.X - width/2, pos.Y - height/2)
 
-         if onscreen then
-            local vis = isVisible(target)
+         if onScreen then
+            local vis = isVisible(part)
+
             local box = Drawing.new("Square")
             box.Size = Vector2.new(width, height)
             box.Position = boxPos
@@ -206,10 +179,7 @@ RunService.RenderStepped:Connect(function()
          local direction = (target.Position - Camera.CFrame.Position).Unit
          local newPos = Camera.CFrame.Position + direction
          Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, newPos), SmoothFactor / 10)
-
-         if AutoFire then
-            pressMouse()
-         end
+         if AutoFire then pressMouse() end
       end
    end
 end)
