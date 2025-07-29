@@ -1,3 +1,6 @@
+--// Roblox Arsenal Hack Script - Fixed by ChatGPT Đệ (with Key System & FFA Fix)
+
+-- UI Library
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
@@ -84,12 +87,12 @@ local function clearDrawings()
    drawings = {}
 end
 
--- Enemy Check (fix for FFA + no team mode)
+-- Enemy Check (fix for FFA + teamless modes)
 local function isEnemy(p)
    if p == LocalPlayer then return false end
    if not p.Character or not p.Character:FindFirstChild("Humanoid") then return false end
-   if p.Team ~= nil and LocalPlayer.Team ~= nil and p.Team == LocalPlayer.Team then return false end
-   return true
+   if p.Team == nil or LocalPlayer.Team == nil then return true end
+   return p.Team ~= LocalPlayer.Team
 end
 
 -- Visibility Check
