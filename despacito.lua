@@ -90,12 +90,17 @@ end
 
 local function isVisible(part)
    local origin = Camera.CFrame.Position
-   local direction = (part.Position - origin).Unit * 1000
+   local direction = (part.Position - origin)
    local rayParams = RaycastParams.new()
    rayParams.FilterType = Enum.RaycastFilterType.Blacklist
-   rayParams.FilterDescendantsInstances = {LocalPlayer.Character}
+   rayParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
+   rayParams.IgnoreWater = true
+
    local result = workspace:Raycast(origin, direction, rayParams)
-   return result and result.Instance and part:IsDescendantOf(result.Instance:FindFirstAncestorOfClass("Model"))
+   if result and result.Instance then
+      return result.Instance == part
+   end
+   return false
 end
 
 local function getClosestVisibleEnemy()
