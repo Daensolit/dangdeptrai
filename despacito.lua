@@ -1,6 +1,3 @@
---// Roblox Arsenal Hack Script - Fixed by ChatGPT Đệ (with Key System & FFA Fix)
-
--- UI Library
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
