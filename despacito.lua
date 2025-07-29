@@ -74,9 +74,12 @@ local function clearDrawings()
    drawings = {}
 end
 
--- Enemy Check (works for Free For All)
+-- Enemy Check (fix for FFA + no team mode)
 local function isEnemy(p)
-   return p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Humanoid") and p.Character:FindFirstChild("Head")
+   if p == LocalPlayer then return false end
+   if not p.Character or not p.Character:FindFirstChild("Humanoid") then return false end
+   if p.Team ~= nil and LocalPlayer.Team ~= nil and p.Team == LocalPlayer.Team then return false end
+   return true
 end
 
 -- Visibility Check
