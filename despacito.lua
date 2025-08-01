@@ -13,7 +13,7 @@ local Window = Rayfield:CreateWindow({
    Discord = {
       Enabled = false,
    },
-   KeySystem = true,
+   KeySystem = false,
    KeySettings = {
       Title = "HACKGAMEVIP Key System",
       Subtitle = "Liên hệ Admin để lấy Key",
