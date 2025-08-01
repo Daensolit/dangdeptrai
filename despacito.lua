@@ -1,5 +1,6 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
+
 local Window = Rayfield:CreateWindow({
    Name = "Hack Arsenal - HACKGAMEVIP",
    LoadingTitle = "Đang Tải Arsenal Hack...",
