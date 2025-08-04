@@ -13,17 +13,9 @@ local Window = Rayfield:CreateWindow({
    Discord = {
       Enabled = false,
    },
-   KeySystem = false,
-   KeySettings = {
-      Title = "HACKGAMEVIP Key System",
-      Subtitle = "Liên hệ Admin để lấy Key",
-      Note = "Nhập đúng Key để vào menu",
-      FileName = "HGV_Arsenal_Key",
-      SaveKey = true,
-      GrabKeyFromSite = false,
-      Key = {"daensolit2025", "vippro123", "keyfree"}
-   }
+   KeySystem = false
 })
+
 
 local Tab = Window:CreateTab("Arsenal Hack", 4483362458)
 
